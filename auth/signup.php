@@ -127,20 +127,26 @@
                         if(mysqli_num_rows($checkresult) > 0){
                             echo "<p class='error-msg'>User already exist!</p>";
                         }else{
+                            $hashpassword = password_hash($password, PASSWORD_DEFAULT);
                             $sql = "INSERT INTO users (email, password, role)
-                            VALUES ('$email', '$password', '$role')";
+                            VALUES ('$email', '$hashpassword', '$role')";
                             $result = mysqli_query($conn, $sql);
-                            if($result){
+                            if($result && $role == '0'){
                                 echo "<p class='success-msg'>User created successfully!</p>";
+                            }elseif($result && $role == '1'){
+                                echo "<p class='success-msg'>Admin created successfully!</p>";
                             }
                     }
                    
                     }else{
+                        $hashpassword = password_hash($password, PASSWORD_DEFAULT);
                         $sql = "INSERT INTO users (email, password)
-                            VALUES ('$email', '$password')";
+                            VALUES ('$email', '$hashpassword')";
                             $result = mysqli_query($conn, $sql);
-                            if($result){
+                            if($result && $role == '0'){
                                 echo "<p class='success-msg'>User created successfully!</p>";
+                            }elseif($result && $role == '1'){
+                                echo "<p class='success-msg'>Admin created successfully!</p>";
                             }
                     }
                 }

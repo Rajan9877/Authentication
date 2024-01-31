@@ -86,19 +86,43 @@
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $email = $_POST['email'];
             $password = $_POST['password'];
+            $remember_me = isset($_POST['remember_me']);
             $check = "select * from users where email = '$email'";
             $checkresult = mysqli_query($conn, $check);
             if(mysqli_num_rows($checkresult) > 0){
                 $row = mysqli_fetch_assoc($checkresult);
-                if($row['password'] == $password){
+                if(password_verify($password, $row['password'])){
                     if($row['role'] == '1'){
                         $_SESSION["adminlogerid"] = rand();
                         $_SESSION["user_id"] = $row['id'];
-                        header('Location: http://localhost/applycoupon/createcoupon/coupons.php');
+                        if ($remember_me) {
+                            $token = bin2hex(random_bytes(32)); // Generate a random token
+                            
+                            // Store the token in the database
+                            $userId = $row['id']; // Replace with the actual user ID
+                            $query = "UPDATE users SET remember_me_token = '$token' WHERE id = $userId";
+                            $stmt = mysqli_query($conn, $query);
+                    
+                            // Set the token as a cookie (expires in 30 days)
+                            setcookie('remember_me_admin', $token, time() + (30 * 24 * 60 * 60), '/');
+                        }
+                        header('Location: http://localhost/authentication/welcome_admin.php');
                     }else{
                         $_SESSION["logerid"] = rand();
                         $_SESSION["userid"] = $row['id'];
-                        header('Location: http://localhost/applycoupon/applycoupon/amount.php');
+                        if ($remember_me) {
+                            $token = bin2hex(random_bytes(32)); 
+                            
+                            // Store the token in the database
+                            $userId = $row['id']; // Replace with the actual user ID
+                            $query = "UPDATE users SET remember_me_token = '$token' WHERE id = $userId";
+                            $stmt = mysqli_query($conn, $query);
+                            // $stmt->execute(['token' => $hashedToken, 'id' => $userId]);
+                    
+                            // Set the token as a cookie (expires in 30 days)
+                            setcookie('remember_me', $token, time() + (30 * 24 * 60 * 60), '/');
+                        }
+                        header('Location: http://localhost/authentication/welcome_user.php');
                     }
                 }else{
                     echo "<p class='error-msg'>Password is incorrect!</p>";
@@ -117,6 +141,10 @@
                 <div>
                     <label for="password">Password</label><br>
                     <input type="password" name="password" required><br>
+                </div>
+                <div>
+                    <input type="checkbox" name="remember_me" id="remember_me">
+                       <label for="remember_me">Remember Me</label>
                 </div>
                 <div class="formbtn">
                     <button type="submit">Login</button>
